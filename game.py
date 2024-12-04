@@ -1,5 +1,6 @@
 from config import get_db_conn
 from airport import Airport
+from weather import Weather
 
 class Game:
     def __init__(self):
@@ -31,6 +32,49 @@ class Game:
         sql = f'''UPDATE player SET current_airport_id = %s, given_range = %s, money = %s, time=%s, health = %s WHERE id = %s'''
         cursor = self.db.cursor(dictionary=True)
         cursor.execute(sql, (icao, player_range, player_money, player_time, player_health, player_id))
+        return cursor.rowcount
+
+    def decrease_time(self, player_id):
+        sql = "SELECT time FROM player WHERE id = %s"
+        cursor = self.cursor(dictionary=True)
+        cursor.execute(sql, (player_id,))
+        result = cursor.fetchone()
+        current_time = result['time']
+        new_time = current_time - 30
+        sql_update_time = "UPDATE player SET time = %s WHERE id = %s"
+        cursor.execute(sql_update_time, (new_time, player_id))
+        return new_time
+
+    def decrease_health(self, player_id):
+        sql = "UPDATE player SET health GREATEST(health-10) WHERE id = %s"
+        cursor = self.db.cursor(dictionary=True)
+        cursor.execute(sql, player_id)
+        return cursor.rowcount
+
+    def check_health(self, player_id):
+        sql = "SELECT health FROM player WHERE id = %s"
+        cursor = self.db.cursor(dictionary=True)
+        cursor.execute(sql, player_id)
+        result = cursor.fetchone()
+        health = result['health']
+        if health <= 50:
+            return "Your health is low. You need to eat"
+
+    def can_player_travel(self, player_id, lat, lon):
+        bad_weather_condition = ['thunderstorm', 'heavy rain', 'snow', 'fog']
+        weather_info= self.fetch_weather(lat,lon)
+        if weather_info['description'] in bad_weather_condition:
+            sql= "SELECT health FROM player WHERE id = %s"
+            cursor = self.db.cursor(dictionary=True)
+            cursor.execute(sql, player_id)
+            result = cursor.fetchone()
+            cur_health= result['health']
+            if cur_health >= 70:
+                new_health= cur_health - 60
+                update_sql= "UPDATE player SET health = %s WHERE id = %s"
+                cursor.execute(update_sql, (new_health, player_id))
+            else:
+                return "Player's health is too low to travel"
 
     def fetch_riddles(self):
         sql = "SELECT * FROM riddles ORDER BY RAND() LIMIT 1"
@@ -72,7 +116,4 @@ class Game:
             if hint:
                 return hint['hint']
 
-        return "Solve all riddles to get "
-
-
-
+        return "Solve all riddles to get a hint"

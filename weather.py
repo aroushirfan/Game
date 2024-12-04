@@ -1,9 +1,9 @@
 import requests
 from airport import Airport
 
+APIkey = "8d3d5c48d959d00c7826bf07c570923b"
 
 class Weather:
-    APIkey = "8d3d5c48d959d00c7826bf07c570923b"
     def __init__(self):
         self.airport = Airport()
 
@@ -16,7 +16,12 @@ class Weather:
                 raise Exception("Resource not found.")
 
             weather = response.json()
-            return weather
+            weather_info = {
+                "temperature": weather["main"]["temp"],
+                "description": weather["weather"][0]["description"],
+                "icon": weather["weather"][0]["icon"]
+            }
+            return weather_info
 
         except Exception as e:
             return e
