@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Time Traveller's Quest</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+  <script src="script.js" defer></script>
+
+</head>
+<body>
+    <div id="container">
+      <nav id="navbar">
+        <div id="title">Time Traveller's Quest</div>
+        <div id="about">
+          <a href="index.html">Game</a>
+          <a href="about.html">About</a>
+        </div>
+      </nav>
+      <div id="map-container">
+        <div id="map" style="height:100%; width: 100%;"></div>
+      </div>
+      <div id="weather">Weather</div>
+      <div id="riddles">
+        <div id="riddles-header">Riddles</div>
+        <div id="riddles-content"></div>
+        <button onclick="solveRiddle()">Solve Riddle</button>
+        <button onclick="getHint()">Hint</button>
+      </div>
+      <div id="resources">
+        <div>Money: <span id="money"></span></div>
+        <div>Range: <span id="range"></span></div>
+        <div>Time: <span id="time"></span></div>
+        <div>Health: <span id="health"></span></div>
+      </div>
+      <div id="airport-found">Congrats!</div>
+      <form id="startGame">
+        <label for="playerName">Enter your name to begin</label>
+        <input type="text" id="playerName" name="playerName" required>
+        <button type="submit">Start Game</button>
+      </form>
+    </div>
+</body>
+</html>
