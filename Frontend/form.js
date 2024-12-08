@@ -38,7 +38,7 @@ document.querySelector('#startGame').addEventListener('submit', async function (
         return;
     }
     playerState= {
-        player_id: gameState.player_id,
+        id: gameState.player_id,
         money: 20000,
         range: 5000,
         time: 900,

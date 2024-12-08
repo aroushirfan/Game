@@ -41,20 +41,25 @@ class Game:
 
     def decrease_time(self, player_id):
         sql = "SELECT time FROM player WHERE id = %s"
-        cursor = self.cursor(dictionary=True)
+        cursor = self.db.cursor(dictionary=True)
         cursor.execute(sql, (player_id,))
         result = cursor.fetchone()
         current_time = result['time']
-        new_time = current_time - 30
+        new_time = current_time - 1
         sql_update_time = "UPDATE player SET time = %s WHERE id = %s"
         cursor.execute(sql_update_time, (new_time, player_id))
         return new_time
 
     def decrease_health(self, player_id):
-        sql = "UPDATE player SET health GREATEST(health-10) WHERE id = %s"
+        sql = "SELECT health FROM player WHERE id = %s"
         cursor = self.db.cursor(dictionary=True)
-        cursor.execute(sql, player_id)
-        return cursor.rowcount
+        cursor.execute(sql, (player_id,))
+        result = cursor.fetchone()
+        current_health = result['health']
+        new_health = max(current_health - 10, 0)
+        sql_update_time = "UPDATE player SET time = %s WHERE id = %s"
+        cursor.execute(sql_update_time, (new_health, player_id))
+        return new_health
 
     def check_health(self, player_id):
         sql = "SELECT health FROM player WHERE id = %s"

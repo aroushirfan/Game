@@ -132,7 +132,7 @@ body {
     width: 350px;
 }
 
-#airport-found {
+#updates {
     grid-area: airport;
     border: 1px solid black;
     border-radius: 10px;

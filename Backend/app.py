@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
+
 from game import Game
 from airport import Airport
 from weather import Weather
+from target import Target
 
 app=Flask(__name__)
 CORS(app)
@@ -11,6 +13,8 @@ CORS(app)
 game= Game()
 airport= Airport()
 weather= Weather()
+target= Target()
+
 
 @app.route('/create_player', methods=['POST'])
 def create_player():
@@ -38,6 +42,51 @@ def get_airport_by_icao():
     airport_data=airport.get_airport_by_icao(icao)
     return jsonify({'airport':airport_data})
 
+@app.route('/get_weather_for_airports')
+def get_weather_for_airports():
+    airport_weather=weather.get_weather_for_airports()
+    return json.dumps({'airport_weather':airport_weather})
+
+@app.route('/update_player', methods=['POST'])
+def update_player():
+    data=request.json
+    icao= data['icao']
+    player_id=data['player_id']
+    player_range= data['player_range']
+    player_money= data['player_money']
+    player_time= data['player_time']
+    player_health= data['player_health']
+    game.update_player(icao,player_id,player_range,player_money,player_time,player_health)
+    return jsonify({'status':'success'})
+
+@app.route('/check_targets', methods=['POST'])
+def check_targets():
+    data=request.json
+    player_id= data['player_id']
+    current_airport= data['current_airport']
+    target_info= target.check_target(player_id,current_airport)
+    return jsonify(target_info)
+
+@app.route('/decrease_time', methods=['POST'])
+def decrease_time():
+    data=request.json
+    new_time= game.decrease_time(data['player_id'])
+    return json.dumps({'new_time':new_time})
+
+@app.route('/decrease_health', methods=['POST'])
+def decrease_health():
+    data=request.json
+    new_health= game.decrease_health(data['player_id'])
+    return json.dumps({'new_health':new_health})
+
+@app.route('/calculate_distance', methods=['POST'])
+def calculate_distance():
+    data=request.json
+    current_airport=data['current_airport']
+    target_airport=data['target_airport']
+    distance= airport.calculate_distance_by_coordinates(current_airport,target_airport)
+    return jsonify({'distance':distance})
+
 @app.route('/airports_in_domain', methods=['POST'])
 def airports_in_domain():
     data=request.json
@@ -47,11 +96,6 @@ def airports_in_domain():
     in_domain_airports= airport.airports_in_domain(icao_code, airports, player_range)
     return jsonify({'airports':in_domain_airports})
 
-@app.route('/decrease_time')
-def decrease_time():
-    data=request.json
-    new_time= game.decrease_time(data['player_id'])
-    return json.dumps({'new_time':new_time})
 
 @app.route('/check_health')
 def check_health():
@@ -93,10 +137,7 @@ def fetch_hints():
     )
     return json.dumps({'hint':hint})
 
-@app.route('/get_weather_for_airports')
-def get_weather_for_airports():
-    airport_weather=weather.get_weather_for_airports()
-    return json.dumps({'airport_weather':airport_weather})
+
 
 if __name__ == '__main__':
     app.run(use_reloader=True, host='127.0.0.1', port=5000)
