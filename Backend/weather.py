@@ -31,4 +31,4 @@ class Weather:
         for airport in airports:
             weather= self.fetch_weather(airport['latitude_deg'], airport['longitude_deg'])
             airport['weather'] = weather
-            return airports
+        return airports

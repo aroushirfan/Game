@@ -38,6 +38,15 @@ def get_airport_by_icao():
     airport_data=airport.get_airport_by_icao(icao)
     return jsonify({'airport':airport_data})
 
+@app.route('/airports_in_domain', methods=['POST'])
+def airports_in_domain():
+    data=request.json
+    icao_code= data['icao_code']
+    player_range= data['player_range']
+    airports= data['airports']
+    in_domain_airports= airport.airports_in_domain(icao_code, airports, player_range)
+    return jsonify({'airports':in_domain_airports})
+
 @app.route('/decrease_time')
 def decrease_time():
     data=request.json
@@ -84,7 +93,7 @@ def fetch_hints():
     )
     return json.dumps({'hint':hint})
 
-@app.route('/get_weather_for_aiports')
+@app.route('/get_weather_for_airports')
 def get_weather_for_airports():
     airport_weather=weather.get_weather_for_airports()
     return json.dumps({'airport_weather':airport_weather})
