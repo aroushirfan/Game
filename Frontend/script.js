@@ -96,7 +96,9 @@ async function flyHere (airportIdent, airportName) {
         }
         playerState.range-=distance;
 
+        await displayWeather(airportIdent);
         await updatePlayerState (airportIdent, distance, airportName);
+        updatePlayerUI();
     } catch (error) {
         console.log ('Error flying', error);
     }
@@ -145,7 +147,6 @@ async function updatePlayerState(airportIdent, distance, airportName) {
 
         document.querySelector('#updates').innerHTML= `Congratulations! You have successfully flown to ${airportName}, ${airportIdent}. Range used: ${distance}.`;
         updatePlayerUI();
-        await displayWeather(airportIdent);
         await checkTargets(airportIdent);
     } catch (error) {
         console.log('Error updating player state', error)
@@ -206,6 +207,20 @@ async function offerFuelPurchase() {
             updatePlayerUI()
         } else {
             alert ('Invalid amount or insufficient funds.')
+        }
+    }
+}
+
+function buyFood() {
+    if (playerState.health<=50) {
+        const purchase= confirm('Your health is low. Buy food for 100 rupees. It will give you 50 health.');
+        if (purchase && playerState.money>=100) {
+            playerState.money-=100;
+            playerState.health= Math.min(playerState.health + 50, 100);
+            document.querySelector('#updates').innerHTML+=`<br>Food purchased. Health increased by 50.`;
+            updatePlayerUI();
+        } else {
+            alert('Insufficient funds to buy food.')
         }
     }
 }
