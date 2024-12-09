@@ -107,7 +107,7 @@ class Game:
             result = cursor.fetchone()
             if result and result['answer'] == player_answer:
                 correct_answers += 1
-            return correct_answers
+        return correct_answers
 
     def fetch_hints(self, player_id, riddle_answers):
         correct_answers = self.check_riddle_answers(riddle_answers)
@@ -122,8 +122,6 @@ class Game:
                 sql= "SELECT hint FROM hints WHERE airport_id=%s ORDER BY RAND() LIMIT 1"
                 cursor.execute(sql, (target_airport_id,))
                 hint= cursor.fetchone()
-
-            if hint:
-                return hint['hint']
-
+                if hint:
+                    return hint['hint']
         return "Solve all riddles to get a hint"

@@ -14,6 +14,7 @@ function updatePlayerUI () {
     document.querySelector('#time').innerHTML= playerState.time;
     document.querySelector('#health').innerHTML= playerState.health;
 }
+displayMap();
 
 function createMarker (map, airport, isStarting) {
     const weatherInfo = airport.weather ? `Weather: ${airport.weather.description}, Temperature: ${airport.weather.temperature}°C` : 'Weather data unavailable';
@@ -53,8 +54,6 @@ async function displayMap() {
     }
 }
 
-displayMap();
-
 async function displayWeather (airportIdent) {
     try {
         const response = await fetch (`${apiUrl}get_weather_for_airports`);
@@ -79,6 +78,7 @@ async function displayWeather (airportIdent) {
 
 async function flyHere (airportIdent, airportName) {
     try {
+        await offerFuelPurchase()
         const response= await fetch (`${apiUrl}calculate_distance`, {
             method: 'POST',
             headers: {
@@ -95,10 +95,11 @@ async function flyHere (airportIdent, airportName) {
             return;
         }
         playerState.range-=distance;
-
-        await displayWeather(airportIdent);
-        await updatePlayerState (airportIdent, distance, airportName);
         updatePlayerUI();
+        displayWeather(airportIdent);
+        await updatePlayerState (airportIdent, distance, airportName);
+
+
     } catch (error) {
         console.log ('Error flying', error);
     }
@@ -147,7 +148,8 @@ async function updatePlayerState(airportIdent, distance, airportName) {
 
         document.querySelector('#updates').innerHTML= `Congratulations! You have successfully flown to ${airportName}, ${airportIdent}. Range used: ${distance}.`;
         updatePlayerUI();
-        await checkTargets(airportIdent);
+        checkTargets(airportIdent);
+        await buyFood();
     } catch (error) {
         console.log('Error updating player state', error)
     }
@@ -188,8 +190,6 @@ async function checkTargets (airportIdent) {
             document.querySelector('#updates').innerHTML += `<br>${targetMessage}`;
             updatePlayerUI();
         }
-        await offerFuelPurchase();
-        displayMap();
 
     } catch (error) {
         console.log ('Error in checking targets', error);
@@ -212,15 +212,106 @@ async function offerFuelPurchase() {
 }
 
 function buyFood() {
-    if (playerState.health<=50) {
-        const purchase= confirm('Your health is low. Buy food for 100 rupees. It will give you 50 health.');
+    if (playerState.health<=40) {
+        const purchase= confirm('Your health is low. Buy food for 100 rupees. It will give you maximum health.');
         if (purchase && playerState.money>=100) {
             playerState.money-=100;
-            playerState.health= Math.min(playerState.health + 50, 100);
+            playerState.health= Math.min(playerState.health + 60, 100);
             document.querySelector('#updates').innerHTML+=`<br>Food purchased. Health increased by 50.`;
             updatePlayerUI();
         } else {
             alert('Insufficient funds to buy food.')
         }
+    }
+}
+
+async function fetchRiddle() {
+    try {
+        const response= await fetch (`${apiUrl}fetch_riddles`);
+        const data= await response.json();
+        const riddle= data.riddle;
+        document.querySelector('#content').innerHTML= `
+            <b>Riddle:</b> ${riddle.riddle_text}<br>
+            <input type="text" id="riddleAnswer" placeholder="You answer"><br>
+            <button onclick="submitRiddleAnswer(${riddle.id})">Submit Answer</button>            
+        `;
+
+    } catch (error) {
+        console.log('Error fetching riddle', error)
+    }
+}
+
+async function submitRiddleAnswer (riddleId) {
+    try {
+        const answer= document.querySelector('#riddleAnswer').value;
+        const response= await fetch (`${apiUrl}check_riddle_answers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                riddle_answers: { [riddleId]: answer}
+            })
+
+        });
+        const data= await response.json();
+        const correctAnswers= data.correct_answers;
+
+        if (correctAnswers>0) {
+            playerState.money += 600;
+            document.querySelector('#riddles').innerHTML+= `Correct answer! You earned 600 rupees.`
+        } else {
+            document.querySelector('#riddles').innerHTML+= `Sorry incorrect answer!`
+        }
+    } catch (error) {
+        console.log ('Error submitting riddle answer', error);
+    }
+}
+
+async function fetchDifficultRiddle() {
+    try {
+        const response = await fetch(`${apiUrl}fetch_difficult_riddles`);
+        const data = await response.json();
+        const riddles = data.riddle;
+
+        let riddleContent = '<b>Answer these riddles to get a hint.</b><br>'
+        for (let i = 0; i < riddles.length; i++) {
+            const riddle = riddles[i];
+            riddleContent = `
+                ${i + 1}.${riddle.riddle_text}<br>
+                <input type="text" placeholder="You answer"><br>
+                <input type="text" id="riddleAnswer${riddle.id}" placeholder="You answer"><br>
+            `;
+        }
+        riddleContent += <button onClick="submitDifficultRiddleAnswer([${riddleIds.join(',')}])">Submit Answers</button>;
+        document.querySelector('#content').innerHTML= riddleContent;
+    } catch (error) {
+        console.log('Error fetching riddle', error)
+    }
+}
+
+async function submitDifficultRiddleAnswer (riddleIds) {
+    try {
+        const riddleAnswers= {};
+        for (let i=0; i<riddleIds.length; i++) {
+            const id= riddleIds[i];
+            riddleAnswers[i]= document.querySelector('#riddleAnswer').value
+        }
+
+        const response= await fetch (`${apiUrl}check_riddle_answers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                player_id: playerState.id,
+                riddle_answers: riddleAnswers
+            })
+        });
+        const data= await response.json();
+        const hint= data.hint;
+        document.querySelector('#riddles').innerHTML+= `<br>Hint: ${hint}`;
+    } catch (error) {
+        console.log ('Error submitting difficult riddle answers', error);
     }
 }
