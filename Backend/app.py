@@ -92,8 +92,8 @@ def airports_in_domain():
     data=request.json
     icao_code= data['icao_code']
     player_range= data['player_range']
-    airports= data['airports']
-    in_domain_airports= airport.airports_in_domain(icao_code, airports, player_range)
+    airports= Airport().fetch_airports()
+    in_domain_airports= Airport().airports_in_domain(icao_code, airports, player_range)
     return jsonify({'airports':in_domain_airports})
 
 

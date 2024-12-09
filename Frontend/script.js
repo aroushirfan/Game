@@ -148,13 +148,16 @@ async function updatePlayerState(airportIdent, distance, airportName) {
 
         document.querySelector('#updates').innerHTML= `Congratulations! You have successfully flown to ${airportName}, ${airportIdent}. Range used: ${distance}.`;
         updatePlayerUI();
-        checkTargets(airportIdent);
-        checkLoseConditions();
+        const playerWon= await checkTargets(airportIdent);
+        if (!gameWon) {
+            await checkLoseConditions();
+        }
         await buyFood();
     } catch (error) {
         console.log('Error updating player state', error)
     }
 }
+let gameWon= false;
 
 async function checkTargets (airportIdent) {
     try {
@@ -175,7 +178,8 @@ async function checkTargets (airportIdent) {
                 if (target.name==='bomb') {
                     targetMessage= '<b>Congratulations you changed the history! You have won the game.</b>'
                     document.querySelector('#updates').innerHTML= targetMessage;
-                    return;
+                    gameWon=true;
+                    return true;
                 } else {
                     const coupon= confirm (`${target.name} (Value: ${target.value}) found! Do you want to redeem it for money by using 50km range?`);
                     if (coupon && playerState.range>= 50) {
@@ -192,9 +196,11 @@ async function checkTargets (airportIdent) {
             document.querySelector('#updates').innerHTML += `<br>${targetMessage}`;
             updatePlayerUI();
         }
+        return false;
 
     } catch (error) {
         console.log ('Error in checking targets', error);
+        return false;
     }
 }
 
@@ -372,10 +378,4 @@ async function checkLoseConditions () {
         return;
     }
 
-    const canTravel= await checkTravel();
-    if (!canTravel) {
-        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> You have zero airports in domain and not enough range or money to travel to any airport.';
-        return;
-
-    }
 }
