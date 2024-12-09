@@ -17,7 +17,7 @@ class Target:
         WHERE player_id= %s AND location= %s"""
         cursor = self.db.cursor(dictionary=True)
         cursor.execute(sql, (player_id, current_airport))
-        result = cursor.fetchone()
-        if result is None:
-            return False
+        result = cursor.fetchall()
+        if not result:
+            return []
         return result

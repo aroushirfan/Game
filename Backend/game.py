@@ -45,7 +45,7 @@ class Game:
         cursor.execute(sql, (player_id,))
         result = cursor.fetchone()
         current_time = result['time']
-        new_time = current_time - 1
+        new_time = current_time - 30
         sql_update_time = "UPDATE player SET time = %s WHERE id = %s"
         cursor.execute(sql_update_time, (new_time, player_id))
         return new_time

@@ -65,7 +65,7 @@ def check_targets():
     player_id= data['player_id']
     current_airport= data['current_airport']
     target_info= target.check_target(player_id,current_airport)
-    return jsonify(target_info)
+    return jsonify({'targets': target_info})
 
 @app.route('/decrease_time', methods=['POST'])
 def decrease_time():
