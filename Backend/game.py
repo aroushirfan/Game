@@ -93,7 +93,7 @@ class Game:
         return cursor.fetchone()
 
     def fetch_difficult_riddles(self):
-        sql = "SELECT * FROM difficult_riddles ORDER BY RAND() LIMIT 3"
+        sql = "SELECT * FROM difficult_riddles ORDER BY RAND() LIMIT 2"
         cursor = self.db.cursor(dictionary=True)
         cursor.execute(sql)
         return cursor.fetchall()
@@ -109,9 +109,21 @@ class Game:
                 correct_answers += 1
         return correct_answers
 
+    def check_difficult_riddle_answers(self, riddle_answers):
+        correct_answers = 0
+        for riddle_id, player_answer in riddle_answers.items():
+            sql= ("SELECT answer FROM difficult_riddles WHERE id = %s")
+            cursor = self.db.cursor(dictionary=True)
+            cursor.execute(sql, (riddle_id,))
+            result = cursor.fetchone()
+            if result and result['answer'] == player_answer:
+                correct_answers += 1
+        return correct_answers
+
+
     def fetch_hints(self, player_id, riddle_answers):
-        correct_answers = self.check_riddle_answers(riddle_answers)
-        if correct_answers == 3:
+        correct_answers = self.check_difficult_riddle_answers(riddle_answers)
+        if correct_answers == 2:
             sql = "SELECT location FROM target_location WHERE player_id=%s AND target_id= 5 ORDER BY RAND() LIMIT 1"
             cursor= self.db.cursor(dictionary=True)
             cursor.execute(sql, (player_id,))

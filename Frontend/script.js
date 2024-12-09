@@ -149,6 +149,7 @@ async function updatePlayerState(airportIdent, distance, airportName) {
         document.querySelector('#updates').innerHTML= `Congratulations! You have successfully flown to ${airportName}, ${airportIdent}. Range used: ${distance}.`;
         updatePlayerUI();
         checkTargets(airportIdent);
+        checkLoseConditions();
         await buyFood();
     } catch (error) {
         console.log('Error updating player state', error)
@@ -172,8 +173,9 @@ async function checkTargets (airportIdent) {
             let targetMessage= 'You have encountered the following target:';
             for (let target of targets) {
                 if (target.name==='bomb') {
-                    targetMessage= 'Congratulations you changed the history! You have won the game.'
-                    break;
+                    targetMessage= '<b>Congratulations you changed the history! You have won the game.</b>'
+                    document.querySelector('#updates').innerHTML= targetMessage;
+                    return;
                 } else {
                     const coupon= confirm (`${target.name} (Value: ${target.value}) found! Do you want to redeem it for money by using 50km range?`);
                     if (coupon && playerState.range>= 50) {
@@ -232,7 +234,7 @@ async function fetchRiddle() {
         const riddle= data.riddle;
         document.querySelector('#content').innerHTML= `
             <b>Riddle:</b> ${riddle.riddle_text}<br>
-            <input type="text" id="riddleAnswer" placeholder="You answer"><br>
+            <input type="text" id="riddleAnswer${riddle.id}" placeholder="Your answer"><br>
             <button onclick="submitRiddleAnswer(${riddle.id})">Submit Answer</button>            
         `;
 
@@ -243,7 +245,7 @@ async function fetchRiddle() {
 
 async function submitRiddleAnswer (riddleId) {
     try {
-        const answer= document.querySelector('#riddleAnswer').value;
+        const answer= document.querySelector('#riddleAnswer' + riddleId).value;
         const response= await fetch (`${apiUrl}check_riddle_answers`, {
             method: 'POST',
             headers: {
@@ -275,15 +277,16 @@ async function fetchDifficultRiddle() {
         const riddles = data.riddle;
 
         let riddleContent = '<b>Answer these riddles to get a hint.</b><br>'
+        let riddleIds= [];
         for (let i = 0; i < riddles.length; i++) {
             const riddle = riddles[i];
-            riddleContent = `
+            riddleIds.push(riddle.id);
+            riddleContent += `
                 ${i + 1}.${riddle.riddle_text}<br>
-                <input type="text" placeholder="You answer"><br>
-                <input type="text" id="riddleAnswer${riddle.id}" placeholder="You answer"><br>
+                <input type="text" id="difficultRiddleAnswer${riddle.id}" placeholder="Your answer"><br>
             `;
         }
-        riddleContent += <button onClick="submitDifficultRiddleAnswer([${riddleIds.join(',')}])">Submit Answers</button>;
+        riddleContent += `<button onclick="submitDifficultRiddleAnswer([${riddleIds.join(',')}])">Submit Answers</button>`;
         document.querySelector('#content').innerHTML= riddleContent;
     } catch (error) {
         console.log('Error fetching riddle', error)
@@ -295,10 +298,10 @@ async function submitDifficultRiddleAnswer (riddleIds) {
         const riddleAnswers= {};
         for (let i=0; i<riddleIds.length; i++) {
             const id= riddleIds[i];
-            riddleAnswers[i]= document.querySelector('#riddleAnswer').value
+            riddleAnswers[id]= document.querySelector(`#difficultRiddleAnswer` + id).value
         }
 
-        const response= await fetch (`${apiUrl}check_riddle_answers`, {
+        const response= await fetch (`${apiUrl}check_difficult_riddle_answers`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -309,9 +312,70 @@ async function submitDifficultRiddleAnswer (riddleIds) {
             })
         });
         const data= await response.json();
-        const hint= data.hint;
-        document.querySelector('#riddles').innerHTML+= `<br>Hint: ${hint}`;
+        const correctAnswers= data.correct_answers;
+
+        if (correctAnswers>=2) {
+            const hintResponse= await fetch(`${apiUrl}fetch_hints`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    player_id: playerState.id,
+                    riddle_answers: riddleAnswers
+                })
+            });
+            const hintData= await hintResponse.json();
+            const hint= hintData.hint || "Solve riddles correctly to get a hint";
+            document.querySelector('#riddles').innerHTML+= `<br>Hint: ${hint}`;
+
+        } else {
+            document.querySelector('#riddles').innerHTML+= 'Sorry! You need to answer all riddles correctly.';
+        }
+
     } catch (error) {
         console.log ('Error submitting difficult riddle answers', error);
+    }
+}
+
+async function checkTravel() {
+    try {
+        const response= await fetch (`${apiUrl}airports_in_domain`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                icao_code: playerState.current_airport,
+                player_range: playerState.range
+            })
+        });
+        const data= await response.json();
+        const inDomainAirports= data.in_domain_airports;
+
+        return inDomainAirports.length>0;
+    } catch (error) {
+        console.log ('Error in checking', error)
+        return false;
+    }
+}
+
+
+async function checkLoseConditions () {
+
+    if (playerState.time<=0) {
+        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> You ran out of time';
+        return;
+    }
+    if (playerState.health<=0) {
+        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> Your health reached zero';
+        return;
+    }
+
+    const canTravel= await checkTravel();
+    if (!canTravel) {
+        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> You have zero airports in domain and not enough range or money to travel to any airport.';
+        return;
+
     }
 }

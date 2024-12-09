@@ -128,6 +128,13 @@ def check_riddle_answers():
     data=request.json
     correct_answers=game.check_riddle_answers(data['riddle_answers'])
     return json.dumps({'correct_answers':correct_answers})
+
+@app.route('/check_difficult_riddle_answers', methods=['POST'])
+def check_difficult_riddle_answers():
+    data=request.json
+    correct_answers=game.check_difficult_riddle_answers(data['riddle_answers'])
+    return json.dumps({'correct_answers':correct_answers})
+
 @app.route('/fetch_hints', methods=['POST'])
 def fetch_hints():
     data=request.json
