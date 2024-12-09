@@ -366,7 +366,6 @@ async function checkTravel() {
     }
 }
 
-
 async function checkLoseConditions () {
 
     if (playerState.time<=0) {
