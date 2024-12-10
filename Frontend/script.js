@@ -1,6 +1,8 @@
 'use strict';
 const apiUrl= 'http://127.0.0.1:5000/';
 let playerState= JSON.parse(localStorage.getItem('playerState'));
+let gameWon= false;
+let gameLost= false;
 
 if (playerState) {
     updatePlayerUI();
@@ -13,6 +15,9 @@ function updatePlayerUI () {
     document.querySelector('#range').innerHTML= playerState.range;
     document.querySelector('#time').innerHTML= playerState.time;
     document.querySelector('#health').innerHTML= playerState.health;
+     if (gameLost || gameWon) {
+         disableActions();
+     }
 }
 displayMap();
 
@@ -78,6 +83,9 @@ async function displayWeather (airportIdent) {
 
 async function flyHere (airportIdent, airportName) {
     try {
+        if (gameLost || gameWon) {
+            return;
+        }
         await offerFuelPurchase()
         const response= await fetch (`${apiUrl}calculate_distance`, {
             method: 'POST',
@@ -98,8 +106,6 @@ async function flyHere (airportIdent, airportName) {
         updatePlayerUI();
         displayWeather(airportIdent);
         await updatePlayerState (airportIdent, distance, airportName);
-
-
     } catch (error) {
         console.log ('Error flying', error);
     }
@@ -107,6 +113,9 @@ async function flyHere (airportIdent, airportName) {
 
 async function updatePlayerState(airportIdent, distance, airportName) {
     try {
+        if (gameWon || gameLost){
+            return;
+        }
         await fetch(`${apiUrl}update_player`, {
             method: 'POST',
             headers: {
@@ -148,16 +157,33 @@ async function updatePlayerState(airportIdent, distance, airportName) {
 
         document.querySelector('#updates').innerHTML= `Congratulations! You have successfully flown to ${airportName}, ${airportIdent}. Range used: ${distance}.`;
         updatePlayerUI();
-        const playerWon= await checkTargets(airportIdent);
-        if (!gameWon) {
-            await checkLoseConditions();
+        const won= await checkTargets(airportIdent);
+        if (!won) {
+            if (playerState.time<=0) {
+                document.querySelector('#updates').innerHTML= '<br><b>Game Over!</b> You ran out of time';
+                gameLost= true;
+                disableActions();
+                return;
+            }
+            if (playerState.health<=0) {
+                document.querySelector('#updates').innerHTML= '<br><b>Game Over!</b> Your health reached zero';
+                gameLost= true;
+                disableActions();
+                return;
+            }
+            const canTravel=await checkTravel();
+            if (!canTravel) {
+                document.querySelector('#updates').innerHTML= '<br><b>Game Over!</b> No airports in domain';
+                gameLost= true;
+                disableActions();
+                return;
+            }
         }
         await buyFood();
     } catch (error) {
         console.log('Error updating player state', error)
     }
 }
-let gameWon= false;
 
 async function checkTargets (airportIdent) {
     try {
@@ -190,7 +216,6 @@ async function checkTargets (airportIdent) {
                     else {
                         targetMessage +=`<br>${target.name} not redeemed.`;
                     }
-
                 }
             }
             document.querySelector('#updates').innerHTML += `<br>${targetMessage}`;
@@ -268,6 +293,7 @@ async function submitRiddleAnswer (riddleId) {
         if (correctAnswers>0) {
             playerState.money += 600;
             document.querySelector('#riddles').innerHTML+= `Correct answer! You earned 600 rupees.`
+            updatePlayerUI();
         } else {
             document.querySelector('#riddles').innerHTML+= `Sorry incorrect answer!`
         }
@@ -356,6 +382,9 @@ async function checkTravel() {
                 player_range: playerState.range
             })
         });
+        if (!response.ok) {
+            throw new Error(`${response.status}`);
+        }
         const data= await response.json();
         const inDomainAirports= data.in_domain_airports;
 
@@ -366,15 +395,9 @@ async function checkTravel() {
     }
 }
 
-async function checkLoseConditions () {
-
-    if (playerState.time<=0) {
-        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> You ran out of time';
-        return;
+function disableActions () {
+    const flyButtons = document.querySelectorAll('button[onclick^="flyHere"]')
+    for (let i = 0; i < flyButtons.length; i++) {
+        flyButtons[i].disabled = true;
     }
-    if (playerState.health<=0) {
-        document.querySelector('#updates').innerHTML+= '<br><b>Game Over!</b> Your health reached zero';
-        return;
-    }
-
 }

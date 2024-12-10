@@ -30,6 +30,7 @@ class Airport:
         return distance.distance((first['latitude_deg'], first['longitude_deg']),
                                  (second['latitude_deg'], second['longitude_deg'])).km
     def airports_in_domain(self, icao_code, air_ports, player_range):
+        air_ports= self.fetch_airports()
         in_domain_airports = []
         for air_port in air_ports:
             dist_ance = self.calculate_distance_by_coordinates(icao_code, air_port['ident'])
