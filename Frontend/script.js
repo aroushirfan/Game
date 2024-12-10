@@ -5,8 +5,9 @@ let gameWon= false;
 let gameLost= false;
 
 if (playerState) {
-    updatePlayerUI();
+    displayMap();
     displayWeather(playerState.current_airport);
+    updatePlayerUI();
     console.log('Game initialized', playerState);
 }
 
@@ -19,7 +20,7 @@ function updatePlayerUI () {
          disableActions();
      }
 }
-displayMap();
+
 
 function createMarker (map, airport, isStarting) {
     const weatherInfo = airport.weather ? `Weather: ${airport.weather.description}, Temperature: ${airport.weather.temperature}°C` : 'Weather data unavailable';
@@ -173,6 +174,7 @@ async function updatePlayerState(airportIdent, distance, airportName) {
             }
             const canTravel=await checkTravel();
             if (!canTravel) {
+                offerFuelPurchase();
                 document.querySelector('#updates').innerHTML= '<br><b>Game Over!</b> No airports in domain';
                 gameLost= true;
                 disableActions();
@@ -253,7 +255,7 @@ function buyFood() {
             document.querySelector('#updates').innerHTML+=`<br>Food purchased. Health increased by 50.`;
             updatePlayerUI();
         } else {
-            alert('Insufficient funds to buy food.')
+            alert('Clicked cancel or insufficient funds to buy food.')
         }
     }
 }
