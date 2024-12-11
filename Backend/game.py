@@ -62,30 +62,6 @@ class Game:
         cursor.execute(sql_update_time, (new_health, player_id))
         return new_health
 
-    def check_health(self, player_id):
-        sql = "SELECT health FROM player WHERE id = %s"
-        cursor = self.db.cursor(dictionary=True)
-        cursor.execute(sql, player_id)
-        result = cursor.fetchone()
-        health = result['health']
-        if health <= 50:
-            return "Your health is low. You need to eat"
-
-    def can_player_travel(self, player_id, lat, lon):
-        bad_weather_condition = ['thunderstorm', 'heavy rain', 'snow', 'fog']
-        weather_info = self.fetch_weather(lat, lon)
-        if weather_info['description'] in bad_weather_condition:
-            sql = "SELECT health FROM player WHERE id = %s"
-            cursor = self.db.cursor(dictionary=True)
-            cursor.execute(sql, player_id)
-            result = cursor.fetchone()
-            cur_health = result['health']
-            if cur_health >= 70:
-                new_health = cur_health - 60
-                update_sql = "UPDATE player SET health = %s WHERE id = %s"
-                cursor.execute(update_sql, (new_health, player_id))
-            else:
-                return "Player's health is too low to travel"
 
     def fetch_riddles(self):
         sql = "SELECT * FROM riddles ORDER BY RAND() LIMIT 1"

@@ -106,24 +106,6 @@ def airports_in_domain():
     return jsonify({'in_domain_airports': in_domain_airports})
 
 
-@app.route('/check_health')
-def check_health():
-    player_id = request.args.get('player_id')
-    message = game.check_health(player_id)
-    return json.dumps({'message': message})
-
-
-@app.route('/can_player_travel')
-def can_player_travel():
-    data = request.json
-    message = game.can_player_travel(
-        data['player_id'],
-        data['lat'],
-        data['lon'],
-    )
-    return json.dumps({'message': message})
-
-
 @app.route('/fetch_riddles')
 def fetch_riddles():
     riddle = game.fetch_riddles()
