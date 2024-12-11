@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Time Traveller's Quest</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
-  <script src="script.js" defer></script>
+    <meta charset="UTF-8">
+    <title>Time Traveller's Quest</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+    <script src="script.js" defer></script>
 
 </head>
 <body>
-    <div id="container">
-      <nav id="navbar">
+<div id="container">
+    <nav id="navbar">
         <div id="title">Time Traveller's Quest</div>
         <div id="about">
-          <a href="index.html">Game</a>
-          <a href="about.html">About</a>
+            <div id="nav">
+                <a href="index.html">Game</a>
+                <a href="about.html">About</a>
+            </div>
         </div>
-      </nav>
-      <div id="map-container">
+    </nav>
+    <div id="map-container">
         <div id="map" style="height:100%; width: 100%;"></div>
-      </div>
-      <div id="weather"></div>
-      <div id="riddles">
-        <div id="heading" >Riddles and Hints</div>
+    </div>
+    <div id="weather"></div>
+    <div id="riddles">
+        <div id="heading">Riddles and Hints</div>
         <div id="content"></div>
         <button onclick="fetchRiddle()">Solve Riddle</button>
         <button onclick="fetchDifficultRiddle()">Get a hint</button>
-      </div>
-      <div id="resources">
+    </div>
+    <div id="resources">
         <div>Money: <span id="money"></span></div>
         <div>Range: <span id="range"></span></div>
         <div>Time: <span id="time"></span></div>
         <div>Health: <span id="health"></span></div>
-      </div>
-      <div id="updates"></div>
     </div>
+    <div id="updates"></div>
+</div>
 </body>
 </html>
+

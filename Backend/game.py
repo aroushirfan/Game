@@ -4,19 +4,20 @@ from target import Target
 from weather import Weather
 import random
 
+
 class Game:
     def __init__(self):
-        self.db= get_db_conn()
+        self.db = get_db_conn()
         self.airport = Airport()
         self.target = Target()
         self.weather = Weather()
 
-    def create_player(self, p_name, start_money, start_range, start_time, current_airport, health,air_ports):
+    def create_player(self, p_name, start_money, start_range, start_time, current_airport, health, air_ports):
         sql = "INSERT INTO player (name,money,given_range,time,current_airport_id, health) VALUES (%s, %s, %s, %s, %s, %s)"
         cursor = self.db.cursor(dictionary=True)
-        cursor.execute(sql, (p_name, start_money, start_range, start_time, current_airport,health))
+        cursor.execute(sql, (p_name, start_money, start_range, start_time, current_airport, health))
         self.db.commit()
-        play_id= cursor.lastrowid
+        play_id = cursor.lastrowid
 
         targets = self.target.fetch_targets()
         target_list = []
@@ -72,16 +73,16 @@ class Game:
 
     def can_player_travel(self, player_id, lat, lon):
         bad_weather_condition = ['thunderstorm', 'heavy rain', 'snow', 'fog']
-        weather_info= self.fetch_weather(lat,lon)
+        weather_info = self.fetch_weather(lat, lon)
         if weather_info['description'] in bad_weather_condition:
-            sql= "SELECT health FROM player WHERE id = %s"
+            sql = "SELECT health FROM player WHERE id = %s"
             cursor = self.db.cursor(dictionary=True)
             cursor.execute(sql, player_id)
             result = cursor.fetchone()
-            cur_health= result['health']
+            cur_health = result['health']
             if cur_health >= 70:
-                new_health= cur_health - 60
-                update_sql= "UPDATE player SET health = %s WHERE id = %s"
+                new_health = cur_health - 60
+                update_sql = "UPDATE player SET health = %s WHERE id = %s"
                 cursor.execute(update_sql, (new_health, player_id))
             else:
                 return "Player's health is too low to travel"
@@ -92,27 +93,27 @@ class Game:
         cursor.execute(sql)
         return cursor.fetchone()
 
-    def fetch_difficult_riddles(self):
-        sql = "SELECT * FROM difficult_riddles ORDER BY RAND() LIMIT 2"
-        cursor = self.db.cursor(dictionary=True)
-        cursor.execute(sql)
-        return cursor.fetchall()
-
     def check_riddle_answers(self, riddle_answers):
         correct_answers = 0
         for riddle_id, player_answer in riddle_answers.items():
-            sql= ("SELECT answer FROM riddles WHERE id = %s")
+            sql = ("SELECT answer FROM riddles WHERE id = %s")
             cursor = self.db.cursor(dictionary=True)
             cursor.execute(sql, (riddle_id,))
             result = cursor.fetchone()
             if result and result['answer'] == player_answer:
                 correct_answers += 1
         return correct_answers
+
+    def fetch_difficult_riddles(self):
+        sql = "SELECT * FROM difficult_riddles ORDER BY RAND() LIMIT 1"
+        cursor = self.db.cursor(dictionary=True)
+        cursor.execute(sql)
+        return cursor.fetchone()
 
     def check_difficult_riddle_answers(self, riddle_answers):
         correct_answers = 0
         for riddle_id, player_answer in riddle_answers.items():
-            sql= ("SELECT answer FROM difficult_riddles WHERE id = %s")
+            sql = ("SELECT answer FROM difficult_riddles WHERE id = %s")
             cursor = self.db.cursor(dictionary=True)
             cursor.execute(sql, (riddle_id,))
             result = cursor.fetchone()
@@ -120,20 +121,19 @@ class Game:
                 correct_answers += 1
         return correct_answers
 
-
     def fetch_hints(self, player_id, riddle_answers):
         correct_answers = self.check_difficult_riddle_answers(riddle_answers)
-        if correct_answers == 2:
+        if correct_answers >= 1:
             sql = "SELECT location FROM target_location WHERE player_id=%s AND target_id= 5 ORDER BY RAND() LIMIT 1"
-            cursor= self.db.cursor(dictionary=True)
+            cursor = self.db.cursor(dictionary=True)
             cursor.execute(sql, (player_id,))
-            result= cursor.fetchone()
+            result = cursor.fetchone()
 
             if result:
-                target_airport_id= result['location']
-                sql= "SELECT hint FROM hints WHERE airport_id=%s ORDER BY RAND() LIMIT 1"
+                target_airport_id = result['location']
+                sql = "SELECT hint FROM hints WHERE airport_id=%s ORDER BY RAND() LIMIT 1"
                 cursor.execute(sql, (target_airport_id,))
-                hint= cursor.fetchone()
+                hint = cursor.fetchone()
                 if hint:
                     return hint['hint']
         return "Solve all riddles to get a hint"
