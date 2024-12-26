@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-image: url("time2.jpg");
+    font-family: Arial, sans-serif;
+    background-attachment: fixed;
+    overflow: auto;
+    background-color: #1e1e2e;
+    color: #e0e0e0;
+}
+
+
+#about-main {
+    grid-area: main;
+    padding: 20px;
+    max-width: 800px;
+    justify-content: center;
+    align-content: center;
+    background-color: #2a2e3b;
+    border: 1px solid #44475a;
+    border-radius: 10px;
+    text-align: center;
+    color: #f8f8f2;
+}
+
+#navbar {
+    display: flex;
+    justify-content: center;
+    background-color: #FFFFFF;
+    color: #282a36;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+#nav{
+    justify-content: right;
+    text-align: right;
+    padding: 10px;
+    width: 170%;
+}
+#navbar a {
+ text-decoration: none;
+    color: #555555;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+#navbar a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 2px;
+    background-color: #007BFF;
+    transition: width 0.3s ease;
+}
+
+#navbar a:hover {
+    color: #007BFF;
+}
+
+#navbar a:hover::after {
+    width: 100%;
+}
+
+#title {
+    font-size: 2.5rem;
+    color: #000000;
+}
+
+#about a {
+    font-size: 1rem;
+    color: #727472;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: bold; /
+}
+
